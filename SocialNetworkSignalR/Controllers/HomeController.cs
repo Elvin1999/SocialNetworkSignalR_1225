@@ -1,22 +1,43 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
+using SocialNetworkSignalR.Entities;
 using SocialNetworkSignalR.Models;
 using System.Diagnostics;
 
 namespace SocialNetworkSignalR.Controllers
 {
+    [Authorize]
     public class HomeController : Controller
     {
-        private readonly ILogger<HomeController> _logger;
+        private UserManager<CustomIdentityUser> _userManager;
+        private CustomIdentityDbContext _context;
 
-        public HomeController(ILogger<HomeController> logger)
+        public HomeController(UserManager<CustomIdentityUser> userManager, CustomIdentityDbContext context)
         {
-            _logger = logger;
+            _userManager = userManager;
+            _context = context;
         }
 
-        public IActionResult Index()
+        public async Task<IActionResult> Index()
         {
+            var user=await _userManager.GetUserAsync(HttpContext.User);
+            ViewBag.User = user;    
             return View();
         }
+
+        public async Task<IActionResult> GetAllUsers()
+        {
+            var user = await _userManager.GetUserAsync(HttpContext.User);
+            var users = await _context.Users
+                .Where(u => u.Id != user.Id)
+                .OrderByDescending(u=>u.IsOnline)
+                .ToListAsync();
+
+            return Ok(users);
+        }
+
 
         public IActionResult Privacy()
         {
