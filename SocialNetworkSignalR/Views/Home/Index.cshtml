@@ -12,7 +12,9 @@
 </div>
 
 
-
+<div id="alert" class="alert alert-success" role="alert">
+    
+</div>
 <div>
     <h2>Welcome @ViewBag.User.UserName</h2>
     <img src="/images/@ViewBag.User.ImageUrl"
@@ -37,7 +39,7 @@
 
 
 <div class="row">
-    <div id="allusers" class="col-md-12" style="display:flex;flex-direction:row;justify-content:space-between;"></div>
+    <div id="allusers" class="col-md-4" style="display:flex;flex-direction:row;justify-content:space-between;"></div>
     @*<div class="col-md-4">
         <div id="friends">
         </div>
@@ -51,7 +53,7 @@
 
 
 
-<script src="~/lib/jquery/dist/jquery.min.js"></script>
 <script src="~/js/signalr/dist/browser/signalr.js"></script>
 <script src="~/js/chat.js"></script>
+<script src="~/lib/jquery/dist/jquery.min.js"></script>
 <script src="~/js/site.js"></script>

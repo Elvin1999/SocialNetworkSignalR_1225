@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using SocialNetworkSignalR.Entities;
+using SocialNetworkSignalR.Hubs;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -41,7 +42,7 @@ app.UseAuthorization();
 app.UseEndpoints(endpoints =>
 {
     endpoints.MapControllerRoute("Default", "{controller=Home}/{action=Index}/{id?}");
-   // endpoints.MapHub<ChatHub>
+    endpoints.MapHub<ChatHub>("/chathub");
 });
 
 app.Run();
