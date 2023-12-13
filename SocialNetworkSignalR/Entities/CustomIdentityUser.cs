@@ -12,10 +12,12 @@ namespace SocialNetworkSignalR.Entities
         public string ConnectTime { get; set; } = "";
 
         public virtual ICollection<Friend>? Friends { get; set; }
+        public virtual ICollection<FriendRequest>? FriendRequests { get; set; }
 
         public CustomIdentityUser()
         {
             Friends = new List<Friend>();
+            FriendRequests=new List<FriendRequest>();   
         }
     }
 }

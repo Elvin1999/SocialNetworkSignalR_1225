@@ -33,9 +33,15 @@ namespace SocialNetworkSignalR.Hubs
             var user = await _userManager.GetUserAsync(_contextAccessor.HttpContext.User);
             var userItem = _context.Users.SingleOrDefault(x => x.Id == user.Id);
             userItem.IsOnline = false;
+            userItem.DisconnectTime = DateTime.Now;
             await _context.SaveChangesAsync();
             string info = user.UserName + " disconnected successfully";
             await Clients.Others.SendAsync("Disconnect", info);
+        }
+
+        public async Task SendFollow(string id)
+        {
+            await Clients.Users(new String[] { id }).SendAsync("ReceiveNotification");
         }
     }
 }

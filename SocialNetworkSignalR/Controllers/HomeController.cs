@@ -38,6 +38,36 @@ namespace SocialNetworkSignalR.Controllers
             return Ok(users);
         }
 
+        public async Task<IActionResult> SendFollow(string id)
+        {
+            var sender=await _userManager.GetUserAsync (HttpContext.User);
+            var receiverUser=_userManager.Users.FirstOrDefault(u=>u.Id == id);
+            if(receiverUser != null)
+            {
+                receiverUser.FriendRequests.Add(new FriendRequest
+                {
+                    Content=$"{sender.UserName} send friend request at {DateTime.Now.ToLongDateString()}",
+                    SenderId = sender.Id,
+                    Sender=sender,
+                    ReceiverId=id,
+                    Status="Request"
+                });
+
+                await _userManager.UpdateAsync(receiverUser);
+                return Ok();
+            }
+            return BadRequest();
+        } 
+
+
+        public async Task<IActionResult> GetAllRequests()
+        {
+            var current = await _userManager.GetUserAsync(HttpContext.User);
+            var users = _context.Users.Include(nameof(CustomIdentityUser.FriendRequests));
+            var user = users.SingleOrDefault(u => u.Id == current.Id);
+            var items=user.FriendRequests.Where(r=>r.ReceiverId == user.Id);
+            return Ok(items);
+        }
 
         public IActionResult Privacy()
         {
