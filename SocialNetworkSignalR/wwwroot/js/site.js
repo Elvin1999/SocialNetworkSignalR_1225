@@ -39,6 +39,17 @@ function AcceptRequest(id, id2, requestId) {
     })
 }
 
+function DeleteRequest(recieverId,requestId) {
+    $.ajax({
+        url: `/Home/DeleteRequest?requestId=${requestId}`,
+        method: "GET",
+        success: function (data) {
+            SendFollowCall(recieverId);
+        }
+    })
+}
+
+
 function GetMyRequests() {
     $.ajax({
         url: "/Home/GetAllRequests",
@@ -58,7 +69,7 @@ function GetMyRequests() {
                 }
                 else {
                     subContent = ` <div class='card-body'>
-                        <button class='btn btn-secondary'>Delete</button>
+                        <button class='btn btn-secondary' onclick="DeleteRequest('${data[i].receiverId}','${data[i].id}')">Delete</button>
                     </div>`;
                 }
 

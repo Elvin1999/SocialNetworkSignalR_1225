@@ -52,13 +52,24 @@ namespace SocialNetworkSignalR.Controllers
                     ReceiverId = id,
                     Status = "Request"
                 });
-                await _context.SaveChangesAsync();  
+                await _context.SaveChangesAsync();
                 await _userManager.UpdateAsync(receiverUser);
                 return Ok();
             }
             return BadRequest();
         }
 
+        public async Task<IActionResult> DeleteRequest(int requestId)
+        {
+            var item = await _context.FriendRequests.FirstOrDefaultAsync(r => r.Id == requestId);
+            if (item != null)
+            {
+                _context.FriendRequests.Remove(item);
+                await _context.SaveChangesAsync();
+                return Ok();
+            }
+            return BadRequest();
+        }
 
         public async Task<IActionResult> GetAllRequests()
         {
@@ -67,7 +78,7 @@ namespace SocialNetworkSignalR.Controllers
             return Ok(requests);
         }
 
-        public async Task<IActionResult> AcceptRequest(string userId,string senderId, int requestId)
+        public async Task<IActionResult> AcceptRequest(string userId, string senderId, int requestId)
         {
             var receiverUser = await _userManager.Users.FirstOrDefaultAsync(u => u.Id == userId);
             var sender = await _userManager.Users.FirstOrDefaultAsync(u => u.Id == senderId);
