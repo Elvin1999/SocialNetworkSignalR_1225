@@ -17,6 +17,28 @@
 }
 
 
+function AcceptRequest(id, id2, requestId) {
+    $.ajax({
+        url: `/Home/AcceptRequest?userId=${id}&senderId=${id2}&requestId=${requestId}`,
+        method: "GET",
+        success: function (data) {
+            let element = document.querySelector("#alert");
+            element.style.display = "block";
+            element.innerHTML = "You accept request successfully";
+            GetAllUsers();
+            SendFollowCall(id);
+            SendFollowCall(id2);
+            GetMyRequests();
+            GetAllUsers();
+
+            setTimeout(() => {
+                element.innerHTML = "";
+                element.style.display = "none";
+            }, 5000);
+        }
+    })
+}
+
 function GetMyRequests() {
     $.ajax({
         url: "/Home/GetAllRequests",
@@ -26,13 +48,18 @@ function GetMyRequests() {
             let subContent = "";
             console.log(data);
             for (var i = 0; i < data.length; i++) {
-                if (data[i].status = "Request") {
+                if (data[i].status == "Request") {
                     subContent = `
                     <div class='card-body'>
-                        <button class='btn btn-success'>Accept </button>
+                        <button class='btn btn-success' onclick="AcceptRequest('${data[i].senderId}','${data[i].receiverId}','${data[i].id}')">Accept </button>
                         <button class='btn btn-secondary'>Decline</button>
                     </div>
                     `;
+                }
+                else {
+                    subContent = ` <div class='card-body'>
+                        <button class='btn btn-secondary'>Delete</button>
+                    </div>`;
                 }
 
                 let item = `<div class='card' style='width:15rem;'>
@@ -106,3 +133,4 @@ function GetAllUsers() {
 }
 
 GetAllUsers();
+GetMyRequests();

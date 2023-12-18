@@ -22,8 +22,8 @@ namespace SocialNetworkSignalR.Controllers
 
         public async Task<IActionResult> Index()
         {
-            var user=await _userManager.GetUserAsync(HttpContext.User);
-            ViewBag.User = user;    
+            var user = await _userManager.GetUserAsync(HttpContext.User);
+            ViewBag.User = user;
             return View();
         }
 
@@ -32,7 +32,7 @@ namespace SocialNetworkSignalR.Controllers
             var user = await _userManager.GetUserAsync(HttpContext.User);
             var users = await _context.Users
                 .Where(u => u.Id != user.Id)
-                .OrderByDescending(u=>u.IsOnline)
+                .OrderByDescending(u => u.IsOnline)
                 .ToListAsync();
 
             return Ok(users);
@@ -40,39 +40,82 @@ namespace SocialNetworkSignalR.Controllers
 
         public async Task<IActionResult> SendFollow(string id)
         {
-            var sender=await _userManager.GetUserAsync (HttpContext.User);
-            var receiverUser=_userManager.Users.FirstOrDefault(u=>u.Id == id);
-            if(receiverUser != null)
+            var sender = await _userManager.GetUserAsync(HttpContext.User);
+            var receiverUser = _userManager.Users.FirstOrDefault(u => u.Id == id);
+            if (receiverUser != null)
             {
-                receiverUser.FriendRequests.Add(new FriendRequest
+                _context.FriendRequests.Add(new FriendRequest
                 {
-                    Content=$"{sender.UserName} send friend request at {DateTime.Now.ToLongDateString()}",
+                    Content = $"{sender.UserName} send friend request at {DateTime.Now.ToLongDateString()}",
                     SenderId = sender.Id,
-                    Sender=sender,
-                    ReceiverId=id,
-                    Status="Request"
+                    Sender = sender,
+                    ReceiverId = id,
+                    Status = "Request"
                 });
-
+                await _context.SaveChangesAsync();  
                 await _userManager.UpdateAsync(receiverUser);
                 return Ok();
             }
             return BadRequest();
-        } 
+        }
 
 
         public async Task<IActionResult> GetAllRequests()
         {
             var current = await _userManager.GetUserAsync(HttpContext.User);
-            var users = _context.Users.Include(nameof(CustomIdentityUser.FriendRequests));
-            var user = users.SingleOrDefault(u => u.Id == current.Id);
-            var items=user.FriendRequests.Where(r=>r.ReceiverId == user.Id);
-            return Ok(items);
+            var requests = _context.FriendRequests.Where(r => r.ReceiverId == current.Id);
+            return Ok(requests);
+        }
+
+        public async Task<IActionResult> AcceptRequest(string userId,string senderId, int requestId)
+        {
+            var receiverUser = await _userManager.Users.FirstOrDefaultAsync(u => u.Id == userId);
+            var sender = await _userManager.Users.FirstOrDefaultAsync(u => u.Id == senderId);
+
+            if (receiverUser != null)
+            {
+                receiverUser.FriendRequests.Add(new FriendRequest
+                {
+                    Content = $"{sender.UserName} accepted friend request at ${DateTime.Now.ToLongDateString()}",
+                    SenderId = sender.Id,
+                    Sender = sender,
+                    ReceiverId = receiverUser.Id,
+                    Status = "Notification"
+                });
+
+                var receiverFriend = new Friend
+                {
+                    OwnId = receiverUser.Id,
+                    YourFriendId = sender?.Id,
+                };
+
+                var senderFriend = new Friend
+                {
+                    OwnId = sender.Id,
+                    YourFriendId = receiverUser.Id,
+                };
+
+                _context.Friends.Add(senderFriend);
+                _context.Friends.Add(receiverFriend);
+
+                var request = await _context.FriendRequests.FirstOrDefaultAsync(r => r.Id == requestId);
+                _context.FriendRequests.Remove(request);
+
+                await _userManager.UpdateAsync(receiverUser);
+                await _userManager.UpdateAsync(sender);
+
+
+                await _context.SaveChangesAsync();
+            }
+            return Ok();
         }
 
         public IActionResult Privacy()
         {
             return View();
         }
+
+
 
         [ResponseCache(Duration = 0, Location = ResponseCacheLocation.None, NoStore = true)]
         public IActionResult Error()
