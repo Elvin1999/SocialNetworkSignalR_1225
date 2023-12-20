@@ -35,6 +35,23 @@ namespace SocialNetworkSignalR.Controllers
                 .OrderByDescending(u => u.IsOnline)
                 .ToListAsync();
 
+            var myrequests = _context.FriendRequests.Where(r => r.SenderId == user.Id);
+
+            var myfriends = await _context.Friends.Where(f => f.OwnId == user.Id || f.YourFriendId == user.Id).ToListAsync();
+            foreach (var item in users)
+            {
+                var request = myrequests.FirstOrDefault(r => r.ReceiverId == item.Id && r.Status == "Request");
+                if (request != null)
+                {
+                    item.HasRequestPending = true;
+                }
+                var friend = myfriends.FirstOrDefault(f => f.OwnId == item.Id || f.YourFriendId == item.Id);
+                if (friend != null)
+                {
+                    item.IsFriend = true;
+                }
+            }
+
             return Ok(users);
         }
 
@@ -57,6 +74,61 @@ namespace SocialNetworkSignalR.Controllers
                 return Ok();
             }
             return BadRequest();
+        }
+
+        public async Task<IActionResult> GetMyFriends()
+        {
+            var user = await _userManager.GetUserAsync(HttpContext.User);
+            var friends = await _context.Friends
+                .Include(nameof(Friend.YourFriend)).ToListAsync();
+            var myfriends = friends.Where(f => f.OwnId == user.Id);
+            return Ok(myfriends);
+        }
+
+        public async Task<IActionResult> UnFollow(string id)
+        {
+            try
+            {
+                var current = await _userManager.GetUserAsync(HttpContext.User);
+                var friendItems = _context.Friends.Where(f => f.OwnId == id && f.YourFriendId == current.Id || f.YourFriendId == id && f.OwnId == current.Id);
+                _context.Friends.RemoveRange(friendItems);
+                await _context.SaveChangesAsync();
+                return Ok();
+
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ex.Message);
+            }
+        }
+
+        public async Task<IActionResult> DeclineRequest(int id, string senderId)
+        {
+            try
+            {
+                var current = await _userManager.GetUserAsync(HttpContext.User);
+                var request = await _context.FriendRequests.FirstOrDefaultAsync(f => f.Id == id);
+                var sender = await _context.Users.FirstOrDefaultAsync(u => u.Id == senderId);
+
+                _context.FriendRequests.Add(new FriendRequest
+                {
+                    Content = $"${current.UserName} declined your friend request at {DateTime.Now.ToLongTimeString()}",
+                    SenderId = current.Id,
+                    Sender = current,
+                    ReceiverId = sender.Id,
+                    Status = "Notification"
+                });
+
+
+                _context.FriendRequests.Remove(request);
+                await _context.SaveChangesAsync();
+                return Ok();
+
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ex.Message);
+            }
         }
 
         public async Task<IActionResult> DeleteRequest(int requestId)

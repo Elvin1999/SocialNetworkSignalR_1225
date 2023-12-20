@@ -39,7 +39,7 @@ function AcceptRequest(id, id2, requestId) {
     })
 }
 
-function DeleteRequest(recieverId,requestId) {
+function DeleteRequest(recieverId, requestId) {
     $.ajax({
         url: `/Home/DeleteRequest?requestId=${requestId}`,
         method: "GET",
@@ -49,6 +49,26 @@ function DeleteRequest(recieverId,requestId) {
     })
 }
 
+
+function DeclineRequest(id, senderId) {
+    $.ajax({
+        url: `/Home/DeclineRequest?id=${id}&senderId=${senderId}`,
+        method: "GET",
+        success: function (data) {
+            let element = document.querySelector("#alert");
+            element.style.display = "block";
+            element.innerHTML = "You declined request";
+            SendFollowCall(senderId);
+            GetMyRequests();
+            GetAllUsers();
+
+            setTimeout(() => {
+                element.innerHTML = "";
+                element.style.display = "none";
+            }, 5000);
+        }
+    })
+}
 
 function GetMyRequests() {
     $.ajax({
@@ -63,7 +83,7 @@ function GetMyRequests() {
                     subContent = `
                     <div class='card-body'>
                         <button class='btn btn-success' onclick="AcceptRequest('${data[i].senderId}','${data[i].receiverId}','${data[i].id}')">Accept </button>
-                        <button class='btn btn-secondary'>Decline</button>
+                        <button class='btn btn-secondary' onclick="DeclineRequest(${data[i].id},'${data[i].senderId}')">Decline</button>
                     </div>
                     `;
                 }
@@ -90,6 +110,48 @@ function GetMyRequests() {
     })
 }
 
+function UnFollowCall(id) {
+    $.ajax({
+        url: `/Home/UnFollow?id=${id}`,
+        method: "GET",
+        success: function (data) {
+            GetMyRequests();
+            GetAllUsers();
+            SendFollowCall(id);
+        }
+    })
+}
+
+function GetFriends() {
+    $.ajax({
+        url: `/Home/GetMyFriends`,
+        method: "GET",
+        success: function (data) {
+            let content = "";
+            for (var i = 0; i < data.length; i++) {
+                let css = 'border:3px solid springgreen';
+                if (!data[i].yourFriend.isOnline) {
+                    css = 'border:3px solid red';
+                }
+                let item = `
+                <section style='display:flex;width:300px;border:2px solid deepskyblue;margin-top:10px;padding:15px;border-radius:15px;'>
+                <img style='width:60px;height:60px;border-radius:50%;${css}'
+                src='/images/${data[i].yourFriend.imageUrl}'
+                />
+
+                <section style='margin-left:20px;'>
+                    <h4>${data[i].yourFriend.userName}</h4>
+                    <a class='btn btn-outline-success'>Go Chat</a>
+                </section>
+
+                </section>
+                `;
+                content += item;
+            }
+            $("#friends").html(content);
+        }
+    })
+}
 
 function GetAllUsers() {
 
@@ -104,7 +166,20 @@ function GetAllUsers() {
                 let style = '';
                 let subContent = "";
 
-                subContent = `<button onclick="SendFollow('${data[i].id}')" class='btn btn-outline-primary'> Follow</button>`;
+
+                if (data[i].hasRequestPending) {
+                    subContent = `<button  class='btn btn-outline-secondary'> Already Sent</button>`;
+                }
+                else {
+                    if (data[i].isFriend) {
+
+                        subContent = `<button  class='btn btn-outline-secondary' onclick="UnFollowCall('${data[i].id}')"> UnFollow</button>`;
+                    }
+                    else {
+
+                        subContent = `<button onclick="SendFollow('${data[i].id}')" class='btn btn-outline-primary'> Follow</button>`;
+                    }
+                }
 
                 if (data[i].isOnline) {
                     style = 'border:5px solid springgreen;';
@@ -139,6 +214,7 @@ function GetAllUsers() {
                 content += item;
             }
             $("#allusers").html(content);
+            GetFriends();
         }
     })
 }
