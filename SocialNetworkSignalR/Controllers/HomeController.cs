@@ -102,6 +102,23 @@ namespace SocialNetworkSignalR.Controllers
             }
         }
 
+        public async Task<IActionResult> TakeRequest(string id)
+        {
+            try
+            {
+                var current = await _userManager.GetUserAsync(HttpContext.User);
+                var request=await _context.FriendRequests.FirstOrDefaultAsync( f=>f.ReceiverId==id && f.SenderId==current.Id );
+                _context.FriendRequests.Remove( request);
+                await _context.SaveChangesAsync();
+                return Ok();
+            }
+            catch (Exception ex)
+            {
+
+                return BadRequest(ex.Message);
+            }
+        }
+
         public async Task<IActionResult> DeclineRequest(int id, string senderId)
         {
             try

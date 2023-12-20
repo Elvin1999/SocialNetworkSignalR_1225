@@ -122,6 +122,18 @@ function UnFollowCall(id) {
     })
 }
 
+function TakeRequest(id) {
+    $.ajax({
+        url: `/Home/TakeRequest?id=${id}`,
+        method: "GET",
+        success: function (data) {
+            GetMyRequests();
+            GetAllUsers();
+            SendFollowCall(id);
+        }
+    })
+}
+
 function GetFriends() {
     $.ajax({
         url: `/Home/GetMyFriends`,
@@ -168,7 +180,8 @@ function GetAllUsers() {
 
 
                 if (data[i].hasRequestPending) {
-                    subContent = `<button  class='btn btn-outline-secondary'> Already Sent</button>`;
+                    subContent = `<button  class='btn btn-outline-secondary'  onclick="TakeRequest('${data[i].id}')"> Already Sent</button 
+                    >`;
                 }
                 else {
                     if (data[i].isFriend) {
