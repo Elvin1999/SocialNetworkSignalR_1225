@@ -107,8 +107,8 @@ namespace SocialNetworkSignalR.Controllers
             try
             {
                 var current = await _userManager.GetUserAsync(HttpContext.User);
-                var request=await _context.FriendRequests.FirstOrDefaultAsync( f=>f.ReceiverId==id && f.SenderId==current.Id );
-                _context.FriendRequests.Remove( request);
+                var request = await _context.FriendRequests.FirstOrDefaultAsync(f => f.ReceiverId == id && f.SenderId == current.Id);
+                _context.FriendRequests.Remove(request);
                 await _context.SaveChangesAsync();
                 return Ok();
             }
@@ -209,6 +209,53 @@ namespace SocialNetworkSignalR.Controllers
             }
             return Ok();
         }
+
+        public async Task<IActionResult> GoChat(string id)
+        {
+            var user = await _userManager.GetUserAsync(HttpContext.User);
+            var chat = await _context.Chats.FirstOrDefaultAsync(c => c.SenderId == user.Id && c.ReceiverId == id
+            || c.SenderId == id && c.ReceiverId == user.Id);
+
+            if (chat == null)
+            {
+                chat = new Chat
+                {
+                    Messages=new List<Message>(),
+                     ReceiverId=id,
+                      SenderId=user.Id
+                };
+
+                await _context.Chats.AddAsync(chat);
+                await _context.SaveChangesAsync();
+            }
+            var chats = await _context.Chats.Include(nameof(Chat.Receiver)).Where(c => c.SenderId == user.Id || c.ReceiverId == user.Id).ToListAsync();
+
+            foreach (var item in chats)
+            {
+                if (item.ReceiverId == user.Id)
+                {
+                    item.Receiver = _context.Users.FirstOrDefault(u => u.Id == item.SenderId);
+                }
+            }
+
+            var receiver = await _context.Users.FirstOrDefaultAsync(u => u.Id == id);
+            List<Message> messages = new List<Message>();
+            if (chat != null)
+            {
+                messages = await _context.Messages.Where(m => m.ChatId == chat.Id).OrderBy(m=>m.DateTime).ToListAsync();
+            }
+
+            chat.Messages=messages;
+
+            var model = new ChatViewModel
+            {
+                CurrentChat = chat,
+                Chats = chats
+            };
+
+            return View(model); 
+        }
+
 
         public IActionResult Privacy()
         {

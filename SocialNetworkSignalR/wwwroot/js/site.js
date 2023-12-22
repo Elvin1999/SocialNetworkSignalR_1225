@@ -153,7 +153,7 @@ function GetFriends() {
 
                 <section style='margin-left:20px;'>
                     <h4>${data[i].yourFriend.userName}</h4>
-                    <a class='btn btn-outline-success'>Go Chat</a>
+                    <a class='btn btn-outline-success' href='/Home/GoChat/${data[i].yourFriendId}'>Go Chat</a>
                 </section>
 
                 </section>
