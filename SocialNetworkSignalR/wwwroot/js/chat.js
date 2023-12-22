@@ -10,7 +10,6 @@ connection.start().then(function () {
 })
 
 let element = document.querySelector("#alert");
-    element.style.display = "none";
 connection.on("Connect", function (info) {
     console.log("Connect Work");
     GetAllUsers();
@@ -41,7 +40,7 @@ async function GetMessageCall(receiverId, senderId) {
 }
 
 
-connection.on("ReceiveMessages", function () {
+connection.on("ReceiveMessages", function (receiverId,senderId) {
     GetMessages(receiverId,senderId);
 })
 connection.on("ReceiveNotification", function () {

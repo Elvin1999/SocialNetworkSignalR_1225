@@ -16,8 +16,6 @@
     })
 }
 
-
-
 function SendMessage(receiverId, senderId) {
     let content = document.querySelector("#message-input");
     let obj = {
@@ -25,7 +23,7 @@ function SendMessage(receiverId, senderId) {
         senderId: senderId,
         content:content.value
     };
-
+    console.log(obj);
     $.ajax({
         url: `/Home/AddMessage`,
         method: "POST",
