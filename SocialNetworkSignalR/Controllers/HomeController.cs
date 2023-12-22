@@ -220,9 +220,9 @@ namespace SocialNetworkSignalR.Controllers
             {
                 chat = new Chat
                 {
-                    Messages=new List<Message>(),
-                     ReceiverId=id,
-                      SenderId=user.Id
+                    Messages = new List<Message>(),
+                    ReceiverId = id,
+                    SenderId = user.Id
                 };
 
                 await _context.Chats.AddAsync(chat);
@@ -242,18 +242,19 @@ namespace SocialNetworkSignalR.Controllers
             List<Message> messages = new List<Message>();
             if (chat != null)
             {
-                messages = await _context.Messages.Where(m => m.ChatId == chat.Id).OrderBy(m=>m.DateTime).ToListAsync();
+                messages = await _context.Messages.Where(m => m.ChatId == chat.Id).OrderBy(m => m.DateTime).ToListAsync();
             }
 
-            chat.Messages=messages;
+            chat.Messages = messages;
 
             var model = new ChatViewModel
             {
+                CurrentUserId = user.Id,
                 CurrentChat = chat,
                 Chats = chats
             };
 
-            return View(model); 
+            return View(model);
         }
 
 
@@ -263,6 +264,43 @@ namespace SocialNetworkSignalR.Controllers
         }
 
 
+        [HttpPost(Name = "AddMessage")]
+        public async Task<IActionResult> AddMessage(MessageModel model)
+        {
+            try
+            {
+                var chat = await _context.Chats.FirstOrDefaultAsync(c => c.SenderId == model.SenderId && c.ReceiverId == model.ReceiverId
+           || c.SenderId == model.ReceiverId && c.ReceiverId == model.SenderId);
+                if (chat != null)
+                {
+                    var message = new Message
+                    {
+                        ChatId = chat.Id,
+                        Content = model.Content,
+                        DateTime = DateTime.Now,
+                        HasSeen = false,
+                        IsImage = false,
+                        ReceiverId = model.ReceiverId,
+                        SenderId = model.SenderId,
+                    };
+                    await _context.Messages.AddAsync(message);
+                    await _context.SaveChangesAsync();
+                }
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ex.Message);
+            }
+            return Ok();
+        }
+
+        public async Task<IActionResult> GetAllMessages(string receiverId, string senderId)
+        {
+            var messages = await _context.Messages.Where(m => m.ReceiverId == receiverId && m.SenderId == senderId
+            || m.ReceiverId == senderId && m.SenderId == receiverId).OrderBy(m => m.DateTime).ToListAsync();
+            var user = await _userManager.GetUserAsync(HttpContext.User);
+            return Ok(new { Messages = messages, CurrentUserId = user.Id });
+        }
 
         [ResponseCache(Duration = 0, Location = ResponseCacheLocation.None, NoStore = true)]
         public IActionResult Error()

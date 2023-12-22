@@ -17,6 +17,65 @@
 }
 
 
+
+function SendMessage(receiverId, senderId) {
+    let content = document.querySelector("#message-input");
+    let obj = {
+        receiverId: receiverId,
+        senderId: senderId,
+        content:content.value
+    };
+
+    $.ajax({
+        url: `/Home/AddMessage`,
+        method: "POST",
+        data:obj,
+        success: function (data) {
+            GetMessageCall(receiverId, senderId);
+            content.value = "";
+        }
+    })
+
+}
+
+function GetMessages(receiverId,senderId) {
+    $.ajax({
+        url: `/Home/GetAllMessages?receiverId=${receiverId}&senderId=${senderId}`,
+        method: "GET",
+        success: function (data) {
+            let content = "";
+            for (var i = 0; i < data.messages.length; i++) {
+                if (receiverId == data.currentUserId) {
+                    let item = `<section   style='display:flex;margin-top:25px;border:2px solid springgreen;
+margin-left:100px;border-radius:20px 0 0 20px;padding:20px;width:50%;'>
+                        <h5>
+                            ${data.messages[i].content}
+                            </h5>
+                            <p>
+                                ${data.messages[i].dateTime}
+                            </p>
+                        </section>`;
+                    content += item;
+                }
+                else {
+                    let item = `<section    style='display:flex;margin-top:25px;border:2px solid springgreen;
+margin-left:0px;border-radius:0 20px 20px 0;width:50%;padding:20px;'>
+                        <h5>
+                            ${data.messages[i].content}
+                            </h5>
+                            <p>
+                                ${data.messages[i].dateTime}
+                            </p>
+                        </section>`;
+                    content += item;
+                }
+            }
+            console.log(data);
+            $("#currentMessages").html(content);
+        }
+    })
+}
+
 function AcceptRequest(id, id2, requestId) {
     $.ajax({
         url: `/Home/AcceptRequest?userId=${id}&senderId=${id2}&requestId=${requestId}`,
@@ -164,6 +223,9 @@ function GetFriends() {
         }
     })
 }
+
+
+
 
 function GetAllUsers() {
 

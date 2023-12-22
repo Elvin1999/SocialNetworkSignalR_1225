@@ -36,7 +36,16 @@ async function SendFollowCall(id) {
     await connection.invoke("SendFollow", id);
 }
 
+async function GetMessageCall(receiverId, senderId) {
+    await connection.invoke("GetMessages", receiverId, senderId);
+}
+
+
+connection.on("ReceiveMessages", function () {
+    GetMessages(receiverId,senderId);
+})
 connection.on("ReceiveNotification", function () {
     GetMyRequests();
     GetAllUsers();
 })
+

@@ -43,5 +43,10 @@ namespace SocialNetworkSignalR.Hubs
         {
             await Clients.Users(new String[] { id }).SendAsync("ReceiveNotification");
         }
+
+        public async Task GetMessages(string receiverId,string senderId)
+        {
+            await Clients.Users(new String[] { receiverId,senderId }).SendAsync("ReceiveMessages");
+        }
     }
 }

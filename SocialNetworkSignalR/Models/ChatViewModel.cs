@@ -6,5 +6,6 @@ namespace SocialNetworkSignalR
     {
         public Chat? CurrentChat { get; set; }
         public List<Chat>? Chats { get; set; }
+        public string? CurrentUserId { get; set; }
     }
 }
